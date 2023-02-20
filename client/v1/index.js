@@ -30,10 +30,9 @@ console.log(MY_FAVORITE_BRANDS[0]);
  */
 
 // 🎯 TODO 1: The cheapest t-shirt
-// 0. I have 3 favorite brands stored in MY_FAVORITE_BRANDS variable
-// 1. Create a new variable and assign it the link of the cheapest t-shirt
-// I can find on these e-shops
-// 2. Log the variable
+var moins_cher="https://www.faguo-store.com/fr/vetements/7606-arcy-t-shirt-en-coton-recycle-kaki.html"
+console.log("le moins cher = " + moins_cher)
+
 
 /**
  * 👕
