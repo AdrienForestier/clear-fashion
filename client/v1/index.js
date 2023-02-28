@@ -1,8 +1,9 @@
 // Invoking strict mode
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode#invoking_strict_mode
 'use strict';
+const marketplace = require('./data.js')
 
-console.log('🚀 This is it.');
+//console.log('🚀 This is it.');
 
 const MY_FAVORITE_BRANDS = [
   {
@@ -19,8 +20,8 @@ const MY_FAVORITE_BRANDS = [
   }
 ];
 
-console.table(MY_FAVORITE_BRANDS);
-console.log(MY_FAVORITE_BRANDS[0]);
+//console.table(MY_FAVORITE_BRANDS);
+//console.log(MY_FAVORITE_BRANDS[0]);
 
 /**
  * 🌱
@@ -31,7 +32,7 @@ console.log(MY_FAVORITE_BRANDS[0]);
 
 // 🎯 TODO 1: The cheapest t-shirt
 var moins_cher="https://www.faguo-store.com/fr/vetements/7606-arcy-t-shirt-en-coton-recycle-kaki.html"
-console.log("le moins cher = " + moins_cher)
+//console.log("le moins cher = " + moins_cher)
 
 
 /**
@@ -46,29 +47,59 @@ console.log("le moins cher = " + moins_cher)
 // 🎯 TODO 2: Number of products
 // 1. Create a variable and assign it the number of products
 // 2. Log the variable
+const length = marketplace.length
+//console.log(length)
+
 
 // 🎯 TODO 3: Brands name
 // 1. Create a variable and assign it the list of brands name only
 // 2. Log the variable
 // 3. Log how many brands we have
+const arr = [...new Set(marketplace.map(item => item.brand))];
+//console.log(arr)
 
 // 🎯 TODO 4: Sort by price
 // 1. Create a function to sort the marketplace products by price
 // 2. Create a variable and assign it the list of products by price from lowest to highest
 // 3. Log the variable
+//const sorted=marketplace.sort((a,b)=>(a.price>b.price ? 1 : -1));
+function sortByPrice(items){
+  return items.sort((a,b)=>a.price-b.price)
+}
+function sortByPriceReversed(items){
+  return items.sort((a,b)=>b.price-a.price)
+}
+//console.log(sortByPrice(marketplace))
 
 // 🎯 TODO 5: Sort by date
 // 1. Create a function to sort the marketplace objects by products date
 // 2. Create a variable and assign it the list of products by date from recent to old
 // 3. Log the variable
+function sortByDate(items) {
+  return items.sort(function(a, b) {
+    return new Date(b.released) - new Date(a.released);
+  });
+}
+const arrSorted=sortByDate(marketplace)
+//console.log(arrSorted)
 
 // 🎯 TODO 6: Filter a specific price range
 // 1. Filter the list of products between 50€ and 100€
 // 2. Log the list
+const arrPrice = marketplace.filter(function(a){return a.price > 50 && a.price <100;})
+
+let x = arrPrice.map((item) => {
+  return {
+    price: item.price
+  }
+})
+//console.log(arrPrice, x)
 
 // 🎯 TODO 7: Average price
 // 1. Determine the average price of the marketplace
 // 2. Log the average
+const avg = marketplace.reduce((a,b)=>a+b.price,0)/length
+//console.log(avg)
 
 /**
  * 🏎
@@ -89,17 +120,48 @@ console.log("le moins cher = " + moins_cher)
 //   ....
 //   'brand-name-n': [{...}, {...}, ..., {...}],
 // };
-//
+
+function groupBy(list, keyGetter) {
+  const map = new Map();
+  list.forEach((item) => {
+    const key = keyGetter(item);
+    const collection = map.get(key);
+    if (!collection) {
+      map.set(key, [item]);
+    } else {
+      collection.push(item);
+    }
+  });
+  return map;
+}
+const brands = groupBy(marketplace, item => item.brand);
+
 // 2. Log the variable
+//console.log(brands);
+
 // 3. Log the number of products by brands
+/*brands.forEach(function(item) {
+  console.log(item.length);
+})*/
 
 // 🎯 TODO 9: Sort by price for each brand
 // 1. For each brand, sort the products by price, from highest to lowest
 // 2. Log the sort
+const brandByPrice= new Array();
+brands.forEach(function(item, index) {
+  brandByPrice[index] = sortByPriceReversed(item);
+})
+//console.log(brandByPrice)
 
 // 🎯 TODO 10: Sort by date for each brand
 // 1. For each brand, sort the products by date, from old to recent
 // 2. Log the sort
+
+const brandByDate= new Array();
+brands.forEach(function(item, index) {
+  brandByDate[index] = sortByDate(item);
+})
+//console.log(brandByDate)
 
 /**
  * 💶
@@ -111,6 +173,9 @@ console.log("le moins cher = " + moins_cher)
 // 🎯 TODO 11: Compute the p90 price value
 // 1. Compute the p90 price value of each brand
 // The p90 value (90th percentile) is the lower value expected to be exceeded in 90% of the products
+//console.log("loom p90 :",brandByPrice['loom'][ Math.round(brandByPrice['loom'].length * 0.9)].price);
+//console.log("panafrica p90 :",brandByPrice['panafrica'][ Math.round(brandByPrice['panafrica'].length * 0.9)].price);
+//console.log("hast p90 :",brandByPrice['hast'][ Math.round(brandByPrice['hast'].length * 0.9)].price);
 
 /**
  * 🧥
@@ -304,13 +369,54 @@ const COTELE_PARIS = [
 // // 1. Log if we have new products only (true or false)
 // // A new product is a product `released` less than 2 weeks.
 
+/*function compareDate(date){
+  let test = false
+  if(date>=Date.now()-12096e5){
+    test = true
+  }
+  return test
+}
+
+for(let i = 0; i <= length;i++){
+  const date = new Date(COTELE_PARIS[i].released)
+  console.log(date)
+  //compareDate(date) ?console.log(true) :console.log(false)
+}*/
+
+let newProduct = false;
+
+for (let i=0; i < COTELE_PARIS.length; i++) {
+  if (new Date(COTELE_PARIS[i].released)> Date.now() - 12096e5) {
+    newProduct= true;
+    break;
+  }
+}
+//console.log(newProduct)
+
 // 🎯 TODO 2: Reasonable price
 // // 1. Log if coteleparis is a reasonable price shop (true or false)
 // // A reasonable price if all the products are less than 100€
+let reasonable = true;
+for (let i=0; i < COTELE_PARIS.length; i++) {
+  if (COTELE_PARIS[i].price>= 100) {
+    reasonable= false;
+    break;
+  }
+}
+//console.log(reasonable);
+
+const result1 = COTELE_PARIS.filter(item => item.released >= Date.now() - 12096e5)
+if (result1.length > 0){
+  console.log(true)
+}
+else{console.log(false)}
 
 // 🎯 TODO 3: Find a specific product
 // 1. Find the product with the uuid `2b9a47e3-ed73-52f6-8b91-379e9c8e526c`
 // 2. Log the product
+
+const result = COTELE_PARIS.filter(item => item.uuid === "2b9a47e3-ed73-52f6-8b91-379e9c8e526c")
+//console.log(result)
 
 // 🎯 TODO 4: Delete a specific product
 // 1. Delete the product with the uuid `2b9a47e3-ed73-52f6-8b91-379e9c8e526c`
