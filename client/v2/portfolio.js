@@ -26,6 +26,11 @@ const selectShow = document.querySelector('#show-select');
 const selectPage = document.querySelector('#page-select');
 const sectionProducts = document.querySelector('#products');
 const spanNbProducts = document.querySelector('#nbProducts');
+const selectBrand = document.querySelector('#brand-select');
+const filterRecentlyReleased = document.querySelector('#recently-released');
+const filterReasonablePrice = document.querySelector('#reasonable-price');
+const selectSort = document.querySelector('#sort-select');
+const spanNbNewProducts = document.querySelector('#nbNewProducts')
 
 /**
  * Set global value
@@ -54,8 +59,8 @@ const fetchProducts = async (page = 1, size = 12) => {
       console.error(body);
       return {currentProducts, currentPagination};
     }
-
     return body.data;
+
   } catch (error) {
     console.error(error);
     return {currentProducts, currentPagination};
@@ -71,10 +76,11 @@ const renderProducts = products => {
   const div = document.createElement('div');
   const template = products
     .map(product => {
+      //console.log(product)
       return `
       <div class="product" id=${product.uuid}>
         <span>${product.brand}</span>
-        <a href="${product.link}">${product.name}</a>
+        <a href="${product.link}" target="_blank">${product.name}</a>
         <span>${product.price}</span>
       </div>
     `;
@@ -106,16 +112,42 @@ const renderPagination = pagination => {
  * Render page selector
  * @param  {Object} pagination
  */
-const renderIndicators = pagination => {
-  const {count} = pagination;
+const renderIndicators = (products,pagination) => {
+  //const {count} = pagination;
+  var nb=0;
+  for(let i=0;i<currentProducts.length;i++){
+    if(new Date(currentProducts[i].released)>new Date(Math.abs(Date.now()-12096e5))){nb++;}}
+  console.log(currentProducts.length)
 
-  spanNbProducts.innerHTML = count;
+  spanNbNewProducts.innerHTML = nb;
+  //spanNbProducts.innerHTML = count;
 };
+
+function pValue(products, value){
+  let prices = new Array();
+  for(let i=0;i<products.length;i++){
+    prices.add(products[i].price)
+  }
+  console.log(prices)
+}
+
+const renderBrands = products => {
+  let brands=[];
+  for(let i = 0; i<products.length;i++){
+    if(!brands.includes(products[i].brand))
+      brands.push(products[i].brand)
+  }
+  const choices=Array.from({'length':brands.length},
+      (value,index)=>`<option value="${brands[index]}">${brands[index]}</option>`).join('')
+  selectBrand.innerHTML=choices;
+}
+
 
 const render = (products, pagination) => {
   renderProducts(products);
   renderPagination(pagination);
   renderIndicators(pagination);
+  renderBrands(products);
 };
 
 /**
@@ -127,14 +159,53 @@ const render = (products, pagination) => {
  */
 selectShow.addEventListener('change', async (event) => {
   const products = await fetchProducts(currentPagination.currentPage, parseInt(event.target.value));
-
   setCurrentProducts(products);
   render(currentProducts, currentPagination);
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
   const products = await fetchProducts();
-
   setCurrentProducts(products);
   render(currentProducts, currentPagination);
 });
+
+selectPage.addEventListener('change',async(event)=>{
+  const products = await fetchProducts(parseInt(event.target.value), currentPagination.pageSize);
+  setCurrentProducts(products);
+  render(currentProducts,currentPagination);
+});
+
+selectBrand.addEventListener('change', event=>{
+  currentProducts=currentProducts.filter(a=>a.brand==event.target.value);
+  render(currentProducts,currentPagination);
+})
+
+filterRecentlyReleased.onclick=function(){
+  currentProducts=currentProducts.filter(a=> new Date(a.released)-Date.now()>12096e5);
+  render(currentProducts,currentPagination);
+};
+
+filterReasonablePrice.onclick=function(){
+  currentProducts=currentProducts.filter(a=>a.price<50);
+  render(currentProducts,currentPagination);
+};
+
+selectSort.addEventListener('change', event=>{
+  switch(event.target.value){
+    default:
+      break;
+    case 'price-asc':
+      currentProducts.sort((a,b)=>a.price-b.price)
+          break;
+    case'price-desc':
+      currentProducts.sort((a,b)=>a.price-b.price).reverse()
+          break;
+    case'date-asc':
+      currentProducts.sort((a,b)=>new Date(a.released)-new Date(b.released)).reverse()
+          break;
+    case'date-desc':
+      currentProducts.sort((a,b)=>new Date(a.released)-new Date(b.released))
+          break;
+  }
+  render(currentProducts,currentPagination);
+})
