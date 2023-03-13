@@ -117,7 +117,6 @@ const renderIndicators = (products,pagination) => {
   var nb=0;
   for(let i=0;i<currentProducts.length;i++){
     if(new Date(currentProducts[i].released)>new Date(Math.abs(Date.now()-12096e5))){nb++;}}
-  console.log(currentProducts.length)
 
   spanNbNewProducts.innerHTML = nb;
   //spanNbProducts.innerHTML = count;
@@ -128,10 +127,10 @@ function pValue(products, value){
   for(let i=0;i<products.length;i++){
     prices.add(products[i].price)
   }
-  console.log(prices)
 }
 
-const renderBrands = products => {
+const renderBrands = async () => {
+  const products = await fetchProducts(1,currentPagination.count)
   let brands=[];
   for(let i = 0; i<products.length;i++){
     if(!brands.includes(products[i].brand))
@@ -180,32 +179,51 @@ selectBrand.addEventListener('change', event=>{
   render(currentProducts,currentPagination);
 })
 
-filterRecentlyReleased.onclick=function(){
-  currentProducts=currentProducts.filter(a=> new Date(a.released)-Date.now()>12096e5);
+filterRecentlyReleased.onclick=async function (){
+  const all = await fetchProducts(1, currentPagination.count)
+  all.result=all.result.filter(a=> new Date(a.released)-Date.now()>12096e5);
+  setCurrentProducts(all)
   render(currentProducts,currentPagination);
 };
 
-filterReasonablePrice.onclick=function(){
-  currentProducts=currentProducts.filter(a=>a.price<50);
+filterReasonablePrice.onclick= async function (){
+  console.log(currentPagination)
+  const all = await fetchProducts(1, currentPagination.count)
+  all.result=all.result.filter(a=>a.price<100);
+  all.meta.pageSize=12
+  setCurrentProducts(all)
+  console.log(currentPagination)
   render(currentProducts,currentPagination);
+  console.log(currentPagination)
 };
 
-selectSort.addEventListener('change', event=>{
+selectSort.addEventListener('change', async event=>{
+  const test = currentPagination
+  const all = await fetchProducts(1, currentPagination.count)
+  currentPagination.pageSize=12;
   switch(event.target.value){
     default:
       break;
     case 'price-asc':
-      currentProducts.sort((a,b)=>a.price-b.price)
-          break;
+      all.result.sort((a,b)=>a.price-b.price);
+      setCurrentProducts(all);
+      render(currentProducts,test);
+      break;
     case'price-desc':
-      currentProducts.sort((a,b)=>a.price-b.price).reverse()
-          break;
+      all.result.sort((a,b)=>a.price-b.price).reverse();
+      setCurrentProducts(all);
+      render(currentProducts,currentPagination);
+      break;
     case'date-asc':
-      currentProducts.sort((a,b)=>new Date(a.released)-new Date(b.released)).reverse()
-          break;
+      all.result.sort((a,b)=>new Date(a.released)-new Date(b.released)).reverse();
+      setCurrentProducts(all);
+      render(currentProducts,currentPagination);
+      break;
     case'date-desc':
-      currentProducts.sort((a,b)=>new Date(a.released)-new Date(b.released))
-          break;
+      all.result.sort((a,b)=>new Date(a.released)-new Date(b.released));
+      setCurrentProducts(all);
+      render(currentProducts,currentPagination);
+      break;
   }
   render(currentProducts,currentPagination);
 })
