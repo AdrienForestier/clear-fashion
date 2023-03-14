@@ -9,6 +9,11 @@ async function createCollection(db) {
 
 async function main() {
     const db = await connectToDatabase();
+    const collection = db.collection('products');
+
+    collection.deleteMany({})
+    console.log('Emptied the database ...')
+
     const jsonPath1 = path.join(__dirname, '../dedicatedbrand.json');
     const jsonPath2 = path.join(__dirname, '../montlimart.json');
     const jsonPath3 = path.join(__dirname, '../circleSportsWear.json');
@@ -17,11 +22,10 @@ async function main() {
     const products2 = JSON.parse(fs.readFileSync(jsonPath2, 'utf8'));
     const products3 = JSON.parse(fs.readFileSync(jsonPath3, 'utf8'));
     const products = [...products1, ...products2, ...products3];
-    console.log("Loaded ...")
+    console.log("Loaded all products...")
 
-    const collection = db.collection('products');
     const result = collection.insertMany(products)
-    console.log("Added ...")
+    console.log("Added all products ...")
 }
 
 main();
