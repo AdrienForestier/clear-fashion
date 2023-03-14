@@ -9,7 +9,7 @@ const fs = require("fs");
  */
 const parse = data => {
     const $ = cheerio.load(data);
-    return $('#product-grid .grid__item')
+    return $('.product-grid .grid__item')
         .map((i, element) => {
             const name = $(element)
                 .find('.full-unstyled-link')
