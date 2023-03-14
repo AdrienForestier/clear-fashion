@@ -9,6 +9,7 @@ const fs = require('fs');
  */
 const parse = data => {
     const $ = cheerio.load(data);
+    const brand = 'Montlimart';
     return $('.products-list .products-list__block')
         .map((i, element) => {
             const name = $(element)
@@ -21,8 +22,8 @@ const parse = data => {
                     .find('.price')
                     .text()
             );
-
-            return {name, price};
+            const date = new Date()
+            return {name, price, brand, date};
         })
         .get();
 };

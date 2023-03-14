@@ -9,6 +9,7 @@ const fs = require("fs");
  */
 const parse = data => {
     const $ = cheerio.load(data);
+    const brand = 'CircleSportsWear';
     return $('.product-grid .grid__item')
         .map((i, element) => {
             const name = $(element)
@@ -23,7 +24,8 @@ const parse = data => {
                     .text()
                     .split("€")[1]
             );
-            return {name, price};
+            const date = new Date()
+            return {name, price, brand, date};
         })
         .get();
 };
