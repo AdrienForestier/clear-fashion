@@ -14,7 +14,7 @@ async function main(){
     console.log(productsScrapedDate);
 
     console.log('All the products that cost less than 80€ :')
-    const productsCheap = await collection.find({price:{$lt:90}}).toArray();
+    const productsCheap = await collection.find({price:{$lt:80}}).toArray();
     console.log(productsCheap);
 
     console.log('All the products sorted by price :')
@@ -24,6 +24,7 @@ async function main(){
     console.log('All the products sorted by date :')
     const productsSortedDate = await collection.find({}).sort({date:1}).toArray();
     console.log(productsSortedDate);
+    process.exit(0)
 }
 
 main()

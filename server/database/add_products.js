@@ -26,6 +26,7 @@ async function main() {
 
     const result = collection.insertMany(products)
     console.log("Added all products ...")
+    process.exit(0)
 }
 
 main();
