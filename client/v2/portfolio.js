@@ -26,11 +26,16 @@ const selectShow = document.querySelector('#show-select');
 const selectPage = document.querySelector('#page-select');
 const sectionProducts = document.querySelector('#products');
 const spanNbProducts = document.querySelector('#nbProducts');
+const spanNbBrands = document.querySelector('#nbBrands')
 const selectBrand = document.querySelector('#brand-select');
 const filterRecentlyReleased = document.querySelector('#recently-released');
 const filterReasonablePrice = document.querySelector('#reasonable-price');
 const selectSort = document.querySelector('#sort-select');
-const spanNbNewProducts = document.querySelector('#nbNewProducts')
+const spanNbNewProducts = document.querySelector('#nbNewProducts');
+const spanP50value = document.querySelector('#p50Value');
+const spanP90value = document.querySelector('#p90Value');
+const spanP95value = document.querySelector('#p95Value');
+const spanLastReleased = document.querySelector('#lastReleased');
 
 /**
  * Set global value
@@ -89,7 +94,7 @@ const renderProducts = products => {
 
   div.innerHTML = template;
   fragment.appendChild(div);
-  sectionProducts.innerHTML = '<h2>Products</h2>';
+  sectionProducts.innerHTML = '<h2></h2>';
   sectionProducts.appendChild(fragment);
 };
 
@@ -100,42 +105,67 @@ const renderProducts = products => {
 const renderPagination = pagination => {
   const {currentPage, pageCount} = pagination;
   const options = Array.from(
-    {'length': pageCount},
-    (value, index) => `<option value="${index + 1}">${index + 1}</option>`
+      {'length': pageCount},
+      (value, index) => `<option value="${index + 1}">${index + 1}</option>`
   ).join('');
 
   selectPage.innerHTML = options;
   selectPage.selectedIndex = currentPage - 1;
 };
 
+function pValue(products, value){
+  const val = (100-value)/100
+  const price = [];
+  for(let i=0;i<products.length;i++){
+    price.push(products[i].price);
+  }
+  price.sort(function (a,b){return (a-b);});
+  return price[Math.trunc(val*price.length)];
+}
+
+function lastReleased(products){
+  const dates = [];
+  for(let i=0;i<products.length;i++){
+    dates.push(products[i].released);
+  }
+  dates.sort(function (a,b){return(a-b);});
+  return dates[0];
+}
+
 /**
  * Render page selector
  * @param  {Object} pagination
  */
-const renderIndicators = (products,pagination) => {
-  //const {count} = pagination;
-  var nb=0;
-  for(let i=0;i<currentProducts.length;i++){
-    if(new Date(currentProducts[i].released)>new Date(Math.abs(Date.now()-12096e5))){nb++;}}
 
+const renderIndicators = async (pagination) => {
+  const product = await fetchProducts(1, currentPagination.count);
+  const {count} = pagination;
+  let nb=0;
+  for(let i=0;i<product.result.length;i++){
+    // for the new released products, 2 weeks isn't enough.
+    if(Date.now() - new Date(product.result[i].released)<1.21e+9){nb++;}}
   spanNbNewProducts.innerHTML = nb;
-  //spanNbProducts.innerHTML = count;
+  spanNbProducts.innerHTML = count;
+  spanP50value.innerHTML=pValue(product.result, 50);
+  spanP90value.innerHTML=pValue(product.result,90);
+  spanP95value.innerHTML=pValue(product.result,95);
+  spanLastReleased.innerHTML=lastReleased(product.result);
 };
 
-function pValue(products, value){
-  let prices = new Array();
-  for(let i=0;i<products.length;i++){
-    prices.add(products[i].price)
-  }
-}
+
 
 const renderBrands = async () => {
-  const products = await fetchProducts(1,currentPagination.count)
-  let brands=[];
-  for(let i = 0; i<products.length;i++){
-    if(!brands.includes(products[i].brand))
-      brands.push(products[i].brand)
-  }
+  const response = await fetch(`https://clear-fashion-api.vercel.app/brands`)
+  const body = await response.json();
+  const brands = body.data.result;
+  spanNbBrands.innerHTML=brands.length
+  //  That was another method, but it doesn't work well.
+  /*let brands=[];
+  for(let i = 0; i<products.result.length;i++){
+    if(!brands.includes(products.result[i].brand))
+      brands.push(products.result[i].brand)
+  }*/
+
   const choices=Array.from({'length':brands.length},
       (value,index)=>`<option value="${brands[index]}">${brands[index]}</option>`).join('')
   selectBrand.innerHTML=choices;
@@ -146,7 +176,6 @@ const render = (products, pagination) => {
   renderProducts(products);
   renderPagination(pagination);
   renderIndicators(pagination);
-  renderBrands(products);
 };
 
 /**
@@ -164,6 +193,7 @@ selectShow.addEventListener('change', async (event) => {
 
 document.addEventListener('DOMContentLoaded', async () => {
   const products = await fetchProducts();
+  renderBrands(products);
   setCurrentProducts(products);
   render(currentProducts, currentPagination);
 });
@@ -174,27 +204,26 @@ selectPage.addEventListener('change',async(event)=>{
   render(currentProducts,currentPagination);
 });
 
-selectBrand.addEventListener('change', event=>{
-  currentProducts=currentProducts.filter(a=>a.brand==event.target.value);
+selectBrand.addEventListener('change', async(event)=>{
+  const prod = await fetchProducts(1, currentPagination.count);
+  prod.result = prod.result.filter(a=>a.brand==event.target.value);
+  setCurrentProducts(prod);
   render(currentProducts,currentPagination);
 })
 
 filterRecentlyReleased.onclick=async function (){
   const all = await fetchProducts(1, currentPagination.count)
-  all.result=all.result.filter(a=> new Date(a.released)-Date.now()>12096e5);
+  all.result=all.result.filter(a=> Date.now() - new Date(a.released)<1.21e+9);
   setCurrentProducts(all)
   render(currentProducts,currentPagination);
 };
 
 filterReasonablePrice.onclick= async function (){
-  console.log(currentPagination)
   const all = await fetchProducts(1, currentPagination.count)
   all.result=all.result.filter(a=>a.price<100);
   all.meta.pageSize=12
   setCurrentProducts(all)
-  console.log(currentPagination)
   render(currentProducts,currentPagination);
-  console.log(currentPagination)
 };
 
 selectSort.addEventListener('change', async event=>{
